@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Certificate Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+    header {
+      background: #1f2937;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 6px; }
+    header p { margin: 0; color: #d1d5db; }
+    .container {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 18px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+    h2 { margin-top: 0; }
+    .upload-box {
+      border: 2px dashed #9ca3af;
+      padding: 22px;
+      text-align: center;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    input[type="file"] { margin-top: 10px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 330px;
+      gap: 20px;
+    }
+    .preview-wrap {
+      background: #e5e7eb;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      overflow: auto;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #bbb;
+      background: white;
+      cursor: move;
+    }
+    .control { margin-bottom: 15px; }
+    .control label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    input[type="range"] { width: 100%; }
+    input[type="number"], input[type="color"], select {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+    }
+    button {
+      border: 0;
+      padding: 11px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      margin: 5px 5px 5px 0;
+      font-weight: bold;
+    }
+    .primary { background: #2563eb; color: white; }
+    .success { background: #16a34a; color: white; }
+    .secondary { background: #e5e7eb; color: #111; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    #status { margin-top: 10px; font-weight: bold; }
+    .names {
+      max-height: 160px;
+      overflow: auto;
+      background: #f9fafb;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 7px;
+    }
+    .small { color: #666; font-size: 14px; }
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Bulk Certificate Generator</h1>
+  <p>Upload a certificate template and a list of names</p>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>1. Upload Files</h2>
+    <div class="upload-box">
+      <b>Certificate Template</b><br>
+      <span class="small">Use PNG, JPG or JPEG</span><br>
+      <input id="templateInput" type="file" accept="image/png,image/jpeg">
+    </div>
+
+    <div class="upload-box">
+      <b>Name List</b><br>
+      <span class="small">Use CSV or XLSX. The first column should contain names.</span><br>
+      <input id="namesInput" type="file" accept=".csv,.xlsx,.xls">
+    </div>
+
+    <div id="status">No files selected.</div>
+  </div>
+
+  <div class="card">
+    <h2>2. Customize Certificate</h2>
+    <div class="layout">
+      <div class="preview-wrap">
+        <canvas id="canvas"></canvas>
+        <p class="small">Drag the name on the certificate to change its position.</p>
+      </div>
+
+      <div>
+        <div class="control">
+          <label for="fontSize">Font Size: <span id="fontValue">50</span> px</label>
+          <input id="fontSize" type="range" min="10" max="150" value="50">
+        </div>
+
+        <div class="control">
+          <label for="fontFamily">Font Style</label>
+          <select id="fontFamily">
+            <option>Arial</option>
+            <option>Georgia</option>
+            <option>Times New Roman</option>
+            <option>Verdana</option>
+            <option>Courier New</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="fontColor">Text Color</label>
+          <input id="fontColor" type="color" value="#000000">
+        </div>
+
+        <div class="control">
+          <label for="xPos">X Position: <span id="xValue">50%</span></label>
+          <input id="xPos" type="range" min="0" max="100" value="50">
+        </div>
+
+        <div class="control">
+          <label for="yPos">Y Position: <span id="yValue">50%</span></label>
+          <input id="yPos" type="range" min="0" max="100" value="50">
+        </div>
+
+        <button class="secondary" id="centerBtn">Center Name</button>
+        <button class="primary" id="pngBtn" disabled>Download Preview PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. Generate Certificates</h2>
+    <p id="countText">Names loaded: 0</p>
+    <div class="names" id="nameList">No names loaded.</div>
+    <br>
+    <button class="success" id="pdfBtn" disabled>Generate Combined PDF</button>
+    <p class="small">The PDF contains one certificate for every uploaded name.</p>
+  </div>
+</div>
+
+<script>
+  const templateInput = document.getElementById("templateInput");
+  const namesInput = document.getElementById("namesInput");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const fontSize = document.getElementById("fontSize");
+  const fontValue = document.getElementById("fontValue");
+  const fontFamily = document.getElementById("fontFamily");
+  const fontColor = document.getElementById("fontColor");
+  const xPos = document.getElementById("xPos");
+  const yPos = document.getElementById("yPos");
+  const xValue = document.getElementById("xValue");
+  const yValue = document.getElementById("yValue");
+  const status = document.getElementById("status");
+  const nameList = document.getElementById("nameList");
+  const countText = document.getElementById("countText");
+  const pdfBtn = document.getElementById("pdfBtn");
+  const pngBtn = document.getElementById("pngBtn");
+
+  let templateImage = new Image();
+  let names = [];
+  let dragging = false;
+
+  function draw(name = names[0] || "Your Name") {
+    if (!templateImage.src) return;
+
+    canvas.width = templateImage.naturalWidth;
+    canvas.height = templateImage.naturalHeight;
+    ctx.drawImage(templateImage, 0, 0, canvas.width, canvas.height);
+
+    const size = Number(fontSize.value);
+    const x = canvas.width * Number(xPos.value) / 100;
+    const y = canvas.height * Number(yPos.value) / 100;
+
+    ctx.font = `${size}px "${fontFamily.value}"`;
+    ctx.fillStyle = fontColor.value;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(name, x, y);
+  }
+
+  templateInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      templateImage.onload = () => {
+        draw();
+        pngBtn.disabled = false;
+        status.textContent = "Template uploaded successfully.";
+      };
+      templateImage.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  namesInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = event => {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, {type: "array"});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+
+        names = rows
+          .map(row => row[0])
+          .filter(value => value !== undefined && String(value).trim() !== "")
+          .map(value => String(value).trim());
+
+        // If the first cell looks like a heading, remove it.
+        if (names.length > 1 && /^(name|names|student name)$/i.test(names[0])) {
+          names.shift();
+        }
+
+        showNames();
+        pdfBtn.disabled = !(names.length && templateImage.src);
+        draw();
+        status.textContent = "Name list uploaded successfully.";
+      } catch (error) {
+        status.textContent = "Could not read the file. Please use CSV or XLSX.";
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  function showNames() {
+    countText.textContent = `Names loaded: ${names.length}`;
+    if (!names.length) {
+      nameList.textContent = "No names loaded.";
+      return;
+    }
+    nameList.innerHTML = names.map((n, i) => `${i + 1}. ${escapeHtml(n)}`).join("<br>");
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, ch => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    }[ch]));
+  }
+
+  [fontSize, fontFamily, fontColor, xPos, yPos].forEach(control => {
+    control.addEventListener("input", () => {
+      fontValue.textContent = fontSize.value;
+      xValue.textContent = xPos.value + "%";
+      yValue.textContent = yPos.value + "%";
+      draw();
+    });
+    control.addEventListener("change", () => {
+      fontValue.textContent = fontSize.value;
+      xValue.textContent = xPos.value + "%";
+      yValue.textContent = yPos.value + "%";
+      draw();
+    });
+  });
+
+  document.getElementById("centerBtn").addEventListener("click", () => {
+    xPos.value = 50;
+    yPos.value = 50;
+    xValue.textContent = "50%";
+    yValue.textContent = "50%";
+    draw();
+  });
+
+  // Drag the certificate name with mouse or touch.
+  function moveName(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+    xPos.value = x;
+    yPos.value = y;
+    xValue.textContent = x.toFixed(0) + "%";
+    yValue.textContent = y.toFixed(0) + "%";
+    draw();
+  }
+
+  canvas.addEventListener("mousedown", () => dragging = true);
+  window.addEventListener("mouseup", () => dragging = false);
+  canvas.addEventListener("mousemove", e => {
+    if (dragging) moveName(e.clientX, e.clientY);
+  });
+
+  canvas.addEventListener("touchstart", e => {
+    dragging = true;
+    moveName(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive: true});
+  canvas.addEventListener("touchmove", e => {
+    if (dragging) moveName(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive: true});
+  canvas.addEventListener("touchend", () => dragging = false);
+
+  pngBtn.addEventListener("click", () => {
+    if (!templateImage.src) return;
+    const link = document.createElement("a");
+    link.download = "certificate-preview.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+
+  pdfBtn.addEventListener("click", async () => {
+    if (!templateImage.src || !names.length) return;
+
+    pdfBtn.disabled = true;
+    pdfBtn.textContent = "Generating...";
+
+    const { jsPDF } = window.jspdf;
+    const orientation = canvas.width >= canvas.height ? "landscape" : "portrait";
+    const pdf = new jsPDF({
+      orientation,
+      unit: "px",
+      format: [canvas.width, canvas.height]
+    });
+
+    names.forEach((name, index) => {
+      if (index > 0) pdf.addPage([canvas.width, canvas.height], orientation);
+      draw(name);
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, canvas.width, canvas.height);
+    });
+
+    pdf.save("bulk-certificates.pdf");
+
+    draw();
+    pdfBtn.disabled = false;
+    pdfBtn.textContent = "Generate Combined PDF";
+    status.textContent = "All certificates generated successfully.";
+  });
+</script>
+</body>
+</html>
