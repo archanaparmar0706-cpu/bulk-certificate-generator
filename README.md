@@ -21,9 +21,9 @@ The project uses SheetJS and jsPDF through CDN links, so an internet connection 
 The first column should contain names:
 
 Name
-Aarav Sharma
-Priya Verma
-Rahul Singh
+- Rahul Chouhan
+- Rohit Sharma
+- Ritesh Patidar
 
 ## Tech Stack
 - HTML
@@ -31,3 +31,6 @@ Rahul Singh
 - JavaScript
 - SheetJS
 - jsPDF
+
+- ## Live Demo
+Live Website: https://bulk-certificate-generator-ruby.vercel.app/
