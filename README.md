@@ -32,5 +32,5 @@ Name
 - SheetJS
 - jsPDF
 
-- ## Live Demo
+## Live Demo
 Live Website: https://bulk-certificate-generator-ruby.vercel.app/
