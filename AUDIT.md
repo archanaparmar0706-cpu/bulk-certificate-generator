@@ -43,3 +43,25 @@ The footer contains many sections and links, making it lengthy on mobile screens
 
 ## Further Testing
 Desktop testing is still required to check layout, alignment, links, and responsiveness.
+
+
+## Desktop Review
+
+### 1. Home Page
+The heading, text, images, and cards are displayed properly on desktop.
+
+### 2. Events Page
+When the Hackathons filter is selected, "No events found" is displayed. This issue is also present on desktop.
+
+### 3. Team Page
+Team member photos, names, and cards are displayed properly on desktop.
+
+### 4. Contact Page
+Contact information and form fields are displayed properly on desktop.
+
+### 5. Footer
+The footer displays four sections: GDG on Campus, Quick Navigation, Google Ecosystem, and Get Involved. Copyright information is not visible at the bottom.
+
+### Suggestions
+- Show a helpful message when no events match the selected filter.
+- Add copyright information at the bottom of the footer.
