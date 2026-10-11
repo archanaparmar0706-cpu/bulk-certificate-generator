@@ -3,7 +3,10 @@
 Website: https://gdgocaitr.vercel.app/
 
 ## Testing
-Mobile view reviewed. Desktop testing is pending.
+
+## Mobile Review
+
+Mobile and desktop views reviewed.
 
 ## Issues Found
 
@@ -42,7 +45,7 @@ The footer contains many sections and links, making it lengthy on mobile screens
 - Contact information and form fields are easy to locate.
 
 ## Further Testing
-Desktop testing is still required to check layout, alignment, links, and responsiveness.
+Desktop review completed. The Home, Team, and Contact pages display correctly. The Hackathons filter shows "No events found", and copyright information is not visible in the footer.
 
 
 ## Desktop Review
